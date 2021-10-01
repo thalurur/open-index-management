@@ -11,6 +11,7 @@
 
 import org.opensearch.gradle.test.RestIntegTestTask
 
+apply plugin: 'opensearch.opensearchplugin'
 apply plugin: 'opensearch.java'
 apply plugin: 'opensearch.testclusters'
 apply plugin: 'opensearch.java-rest-test'
@@ -20,15 +21,15 @@ apply plugin: 'org.jetbrains.kotlin.plugin.allopen'
 
 opensearchplugin {
     name 'opensearch-index-management-extension'
-    description 'sample plugin that extens index management plugin'
+    description 'sample plugin that extends index management plugin'
     classname 'org.opensearch.indexmanagement.sampleextension.SampleExtensionPlugin'
     extendedPlugins = ['opensearch-index-management']
 }
 
 ext {
     projectSubstitutions = [:]
-    licenseFile = rootProject.file('LICENSE.txt')
-    noticeFile = rootProject.file('NOTICE.txt')
+    licenseFile = rootProject.file('LICENSE')
+    noticeFile = rootProject.file('NOTICE')
 }
 
 repositories {
@@ -54,6 +55,12 @@ dependencies {
 
     testCompile "org.opensearch.test:framework:${opensearch_version}"
 }
+
+licenseHeaders.enabled = true
+dependencyLicenses.enabled = false
+validateNebulaPom.enabled = false
+testingConventions.enabled = false
+loggerUsageCheck.enabled = false
 
 javaRestTest.dependsOn(rootProject.assemble)
 javaRestTest {

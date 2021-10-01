@@ -23,6 +23,8 @@ import org.opensearch.index.seqno.SequenceNumbers
 import org.opensearch.indexmanagement.indexstatemanagement.util.WITH_TYPE
 import org.opensearch.indexmanagement.opensearchapi.instant
 import org.opensearch.indexmanagement.opensearchapi.optionalTimeField
+import org.opensearch.script.Script
+import org.opensearch.script.ScriptType
 import java.io.IOException
 import java.time.Instant
 import java.util.Locale
@@ -36,7 +38,8 @@ data class TransformMetadata(
     val lastUpdatedAt: Instant,
     val status: Status,
     val failureReason: String? = null,
-    val stats: TransformStats
+    val stats: TransformStats,
+    val script: Script = Script(ScriptType.INLINE, Script.DEFAULT_TEMPLATE_LANG, "{{}}", mapOf())
 ) : ToXContentObject, Writeable {
 
     enum class Status(val type: String) {

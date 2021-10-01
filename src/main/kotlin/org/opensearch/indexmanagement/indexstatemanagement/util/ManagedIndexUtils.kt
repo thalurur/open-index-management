@@ -75,6 +75,7 @@ import org.opensearch.search.builder.SearchSourceBuilder
 import java.net.InetAddress
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+import org.opensearch.common.settings.ClusterSettings
 
 fun managedIndexConfigIndexRequest(
     index: String,

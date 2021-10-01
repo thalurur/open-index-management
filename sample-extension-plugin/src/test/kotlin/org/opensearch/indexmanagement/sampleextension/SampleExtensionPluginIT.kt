@@ -22,8 +22,8 @@ class SampleExtensionPluginIT: OpenSearchIntegTestCase() {
         val nodesInfoRequest = NodesInfoRequest()
         nodesInfoRequest.addMetric(NodesInfoRequest.Metric.PLUGINS.metricName())
         val nodesInfoResponse = client().admin().cluster().nodesInfo(nodesInfoRequest).actionGet()
-        val pluginInfo = nodesInfoResponse.nodes[0].getInfo(PluginsAndModules::class.java).pluginInfos
-        Assert.assertTrue(pluginInfo.map { info -> info.name }.equals("opensearch-index-management"))
-        Assert.assertTrue(pluginInfo.map { info -> info.name }.equals("opensearch-index-management-sample-extension"))
+        val pluginInfo = nodesInfoResponse.nodes[0].getInfo(PluginsAndModules::class.java).pluginInfos.map { it.name }
+        Assert.assertTrue(pluginInfo.contains("opensearch-index-management-sample-extension"))
+        Assert.assertTrue(pluginInfo.contains("opensearch-index-management"))
     }
 }

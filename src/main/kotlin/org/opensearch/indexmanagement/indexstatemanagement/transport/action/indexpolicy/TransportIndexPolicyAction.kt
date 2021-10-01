@@ -49,6 +49,7 @@ import org.opensearch.index.query.QueryBuilders
 import org.opensearch.index.seqno.SequenceNumbers
 import org.opensearch.indexmanagement.IndexManagementIndices
 import org.opensearch.indexmanagement.IndexManagementPlugin
+import org.opensearch.indexmanagement.indexstatemanagement.IndexMetadataProvider
 import org.opensearch.indexmanagement.indexstatemanagement.ManagedIndexCoordinator.Companion.MAX_HITS
 import org.opensearch.indexmanagement.indexstatemanagement.findConflictingPolicyTemplates
 import org.opensearch.indexmanagement.indexstatemanagement.findSelfConflictingTemplates
@@ -77,7 +78,8 @@ class TransportIndexPolicyAction @Inject constructor(
     val ismIndices: IndexManagementIndices,
     val clusterService: ClusterService,
     val settings: Settings,
-    val xContentRegistry: NamedXContentRegistry
+    val xContentRegistry: NamedXContentRegistry,
+    val indexMetadataProvider: IndexMetadataProvider
 ) : HandledTransportAction<IndexPolicyRequest, IndexPolicyResponse>(
     IndexPolicyAction.NAME, transportService, actionFilters, ::IndexPolicyRequest
 ) {

@@ -7,7 +7,8 @@
 
 package org.opensearch.indexmanagement.spi.indexstatemanagement.model
 
-abstract class IndexMetadataProvider {
-
-    abstract fun getMetadata(indexNames: List<String>): Map<String, IndexMetadata>
+data class ManagedIndexMetadata(
+    val index: String,
+    val policyId: String
+) {
 }

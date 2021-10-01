@@ -34,7 +34,7 @@ class SampleExtensionRestHandler: BaseRestHandler() {
                 restChannel.sendResponse(
                     BytesRestResponse(
                         RestStatus.METHOD_NOT_ALLOWED,
-                        request.method().toString() + " is not allowed."
+                        request.method().toString() + " is not allowed cause..."
                     )
                 )
             }

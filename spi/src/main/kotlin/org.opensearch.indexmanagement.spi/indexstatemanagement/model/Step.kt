@@ -8,13 +8,27 @@
 package org.opensearch.indexmanagement.spi.indexstatemanagement.model
 
 import java.util.Locale
+import org.opensearch.client.Client
+import org.opensearch.cluster.service.ClusterService
 import org.opensearch.common.io.stream.StreamInput
 import org.opensearch.common.io.stream.StreamOutput
 import org.opensearch.common.io.stream.Writeable
 
-abstract class Step(val name: String) {
+abstract class Step(val name: String, val isSafeToDisableOn: Boolean = true) {
 
-    abstract suspend fun execute(): Step
+    fun preExecute(): Step {
+        return this
+    }
+
+    abstract suspend fun execute(clusterService: ClusterService, client: Client, context: StepContext): Step
+
+    fun postExecute(): Step {
+        return this
+    }
+
+    abstract fun getUpdatedManagedIndexMetadata(currentMetadata: ManagedIndexMetadata): ManagedIndexMetadata
+
+    abstract fun isIdempotent(): Boolean
 
     enum class StepStatus(val status: String) : Writeable {
         STARTING("starting"),

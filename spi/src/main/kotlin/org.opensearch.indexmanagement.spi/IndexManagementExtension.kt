@@ -12,8 +12,8 @@
 package org.opensearch.indexmanagement.spi
 
 import org.opensearch.indexmanagement.spi.indexstatemanagement.model.Action
-import org.opensearch.indexmanagement.spi.indexstatemanagement.model.Decision
-import org.opensearch.indexmanagement.spi.indexstatemanagement.model.IndexMetadataProvider
+import org.opensearch.indexmanagement.spi.indexstatemanagement.IndexMetadataService
+import org.opensearch.indexmanagement.spi.indexstatemanagement.ClusterEventHandler
 
 /**
  * SPI for IndexManagement
@@ -22,11 +22,9 @@ interface IndexManagementExtension {
 
     abstract fun getISMActions(): List<Action>
 
-    abstract fun getIndexMetadataProvider(): IndexMetadataProvider
+    abstract fun getProvider(): IndexMetadataService
 
     abstract fun getIndexType(): String
 
-    abstract fun processIndexCreateEvent(): Decision
-
-    abstract fun processIndexDeleteEvent(): Decision
+    abstract fun getClusterEventHandlers(): List<ClusterEventHandler>
 }

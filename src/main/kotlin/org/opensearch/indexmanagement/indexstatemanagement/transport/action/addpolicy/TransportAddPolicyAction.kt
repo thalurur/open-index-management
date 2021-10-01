@@ -55,6 +55,7 @@ import org.opensearch.common.unit.TimeValue
 import org.opensearch.common.xcontent.NamedXContentRegistry
 import org.opensearch.commons.authuser.User
 import org.opensearch.indexmanagement.IndexManagementPlugin.Companion.INDEX_MANAGEMENT_INDEX
+import org.opensearch.indexmanagement.indexstatemanagement.IndexMetadataProvider
 import org.opensearch.indexmanagement.indexstatemanagement.model.Policy
 import org.opensearch.indexmanagement.indexstatemanagement.opensearchapi.getUuidsForClosedIndices
 import org.opensearch.indexmanagement.indexstatemanagement.settings.ManagedIndexSettings
@@ -87,7 +88,8 @@ class TransportAddPolicyAction @Inject constructor(
     val settings: Settings,
     val clusterService: ClusterService,
     val xContentRegistry: NamedXContentRegistry,
-    val indexNameExpressionResolver: IndexNameExpressionResolver
+    val indexNameExpressionResolver: IndexNameExpressionResolver,
+    val indexMetadataProvider: IndexMetadataProvider
 ) : HandledTransportAction<AddPolicyRequest, ISMStatusResponse>(
     AddPolicyAction.NAME, transportService, actionFilters, ::AddPolicyRequest
 ) {
@@ -140,6 +142,7 @@ class TransportAddPolicyAction @Inject constructor(
                 actionListener.onResponse(ISMStatusResponse(0, failedIndices))
                 return
             }
+            indexMetadataProvider.getIndexMetadata("blah", requestedIndices)
             if (user == null) {
                 resolvedIndices.addAll(requestedIndices)
                 getPolicy()

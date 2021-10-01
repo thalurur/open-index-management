@@ -21,7 +21,7 @@ import org.opensearch.index.query.ExistsQueryBuilder
 import org.opensearch.index.query.TermsQueryBuilder
 import org.opensearch.rest.RestStatus
 
-@Suppress("ReturnCount")
+@Suppress("ReturnCount", "LongParameterList", "ComplexCondition")
 class SecurityUtils {
     companion object {
         const val INTERNAL_REQUEST = "index_management_plugin_internal_user"

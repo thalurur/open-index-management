@@ -8,8 +8,6 @@
 package org.opensearch.indexmanagement.sampleextension
 
 import java.util.function.Supplier
-import org.opensearch.action.ActionRequest
-import org.opensearch.action.ActionResponse
 import org.opensearch.client.Client
 import org.opensearch.cluster.metadata.IndexNameExpressionResolver
 import org.opensearch.cluster.node.DiscoveryNodes
@@ -23,9 +21,9 @@ import org.opensearch.common.xcontent.NamedXContentRegistry
 import org.opensearch.env.Environment
 import org.opensearch.env.NodeEnvironment
 import org.opensearch.indexmanagement.spi.IndexManagementExtension
+import org.opensearch.indexmanagement.spi.indexstatemanagement.ClusterEventHandler
+import org.opensearch.indexmanagement.spi.indexstatemanagement.IndexMetadataService
 import org.opensearch.indexmanagement.spi.indexstatemanagement.model.Action
-import org.opensearch.indexmanagement.spi.indexstatemanagement.model.Decision
-import org.opensearch.indexmanagement.spi.indexstatemanagement.model.IndexMetadataProvider
 import org.opensearch.plugins.ActionPlugin
 import org.opensearch.plugins.Plugin
 import org.opensearch.repositories.RepositoriesService
@@ -77,23 +75,19 @@ class SampleExtensionPlugin: ActionPlugin, IndexManagementExtension, Plugin() {
         return listOf(SampleExtensionRestHandler())
     }
 
+    override fun getClusterEventHandlers(): List<ClusterEventHandler> {
+        TODO("Not yet implemented")
+    }
+
     override fun getISMActions(): List<Action> {
         return listOf()
     }
 
     override fun getIndexType(): String {
-        TODO("Not yet implemented")
+        return "test"
     }
 
-    override fun getIndexMetadataProvider(): IndexMetadataProvider {
-        TODO("Not yet implemented")
-    }
-
-    override fun processIndexCreateEvent(): Decision {
-        TODO("Not yet implemented")
-    }
-
-    override fun processIndexDeleteEvent(): Decision {
+    override fun getProvider(): IndexMetadataService {
         TODO("Not yet implemented")
     }
 }
