@@ -13,6 +13,5 @@ import org.opensearch.indexmanagement.spi.indexstatemanagement.model.ActionParse
 class ActionService(val customActions: Map<ActionParser, Action>) {
 
     companion object {
-
     }
 }
