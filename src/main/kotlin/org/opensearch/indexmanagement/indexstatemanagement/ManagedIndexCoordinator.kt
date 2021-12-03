@@ -77,6 +77,8 @@ import org.opensearch.indexmanagement.opensearchapi.parseWithType
 import org.opensearch.indexmanagement.opensearchapi.retry
 import org.opensearch.indexmanagement.opensearchapi.suspendUntil
 import org.opensearch.indexmanagement.opensearchapi.withClosableContext
+import org.opensearch.indexmanagement.spi.indexstatemanagement.ClusterEventHandler
+import org.opensearch.indexmanagement.spi.indexstatemanagement.model.Decision
 import org.opensearch.indexmanagement.util.NO_ID
 import org.opensearch.indexmanagement.util.OpenForTesting
 import org.opensearch.rest.RestStatus
@@ -107,7 +109,8 @@ class ManagedIndexCoordinator(
     private val clusterService: ClusterService,
     private val threadPool: ThreadPool,
     indexManagementIndices: IndexManagementIndices,
-    private val metadataService: MetadataService
+    private val metadataService: MetadataService,
+    private val clusterEventHandlers: List<ClusterEventHandler>
 ) : ClusterStateListener,
     CoroutineScope by CoroutineScope(SupervisorJob() + Dispatchers.Default + CoroutineName("ManagedIndexCoordinator")),
     LifecycleListener() {
@@ -267,7 +270,7 @@ class ManagedIndexCoordinator(
         // indices delete event
         var removeManagedIndexReq = emptyList<DocWriteRequest<*>>()
         var indicesToClean = emptyList<Index>()
-        if (event.indicesDeleted().isNotEmpty()) {
+        if (event.indicesDeleted().isNotEmpty() && shouldProcessDeleteEvent(event)) {
             val managedIndices = getManagedIndices(event.indicesDeleted().map { it.uuid })
             indicesToClean = event.indicesDeleted().filter { it.uuid in managedIndices.keys }
             removeManagedIndexReq = indicesToClean.map { deleteManagedIndexRequest(it.uuid) }
@@ -275,12 +278,31 @@ class ManagedIndexCoordinator(
 
         // check if newly created indices match with any ISM templates
         var updateMatchingIndexReq = emptyList<DocWriteRequest<*>>()
-        if (event.indicesCreated().isNotEmpty())
+        if (event.indicesCreated().isNotEmpty() && shouldProcessCreateEvent(event)) {
             updateMatchingIndexReq = getMatchingIndicesUpdateReq(event.state(), event.indicesCreated())
+        }
 
         updateManagedIndices(updateMatchingIndexReq + removeManagedIndexReq, updateMatchingIndexReq.isNotEmpty())
 
         clearManagedIndexMetaData(indicesToClean.map { deleteManagedIndexMetadataRequest(it.uuid) })
+    }
+
+    private fun shouldProcessDeleteEvent(event: ClusterChangedEvent): Boolean {
+        val decisions = mutableListOf<Decision>()
+        clusterEventHandlers.forEach { handler ->
+            decisions.add(handler.processIndexDeleteEvent(client, clusterService, event))
+        }
+
+        return true
+    }
+
+    private fun shouldProcessCreateEvent(event: ClusterChangedEvent): Boolean {
+        val decisions = mutableListOf<Decision>()
+        clusterEventHandlers.forEach { handler ->
+            decisions.add(handler.processIndexCreateEvent(client, clusterService, event))
+        }
+
+        return true
     }
 
     /**

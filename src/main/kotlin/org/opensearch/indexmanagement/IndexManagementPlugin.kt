@@ -29,6 +29,7 @@ import org.opensearch.common.xcontent.XContentParser.Token
 import org.opensearch.common.xcontent.XContentParserUtils.ensureExpectedToken
 import org.opensearch.env.Environment
 import org.opensearch.env.NodeEnvironment
+import org.opensearch.indexmanagement.indexstatemanagement.IndexMetadataProvider
 import org.opensearch.indexmanagement.indexstatemanagement.IndexStateManagementHistory
 import org.opensearch.indexmanagement.indexstatemanagement.ManagedIndexCoordinator
 import org.opensearch.indexmanagement.indexstatemanagement.ManagedIndexRunner
@@ -106,6 +107,10 @@ import org.opensearch.indexmanagement.rollup.resthandler.RestStopRollupAction
 import org.opensearch.indexmanagement.rollup.settings.LegacyOpenDistroRollupSettings
 import org.opensearch.indexmanagement.rollup.settings.RollupSettings
 import org.opensearch.indexmanagement.settings.IndexManagementSettings
+import org.opensearch.indexmanagement.spi.IndexManagementExtension
+import org.opensearch.indexmanagement.spi.indexstatemanagement.ClusterEventHandler
+import org.opensearch.indexmanagement.spi.indexstatemanagement.IndexMetadataService
+import org.opensearch.indexmanagement.spi.indexstatemanagement.model.Action
 import org.opensearch.indexmanagement.transform.TransformRunner
 import org.opensearch.indexmanagement.transform.action.delete.DeleteTransformsAction
 import org.opensearch.indexmanagement.transform.action.delete.TransportDeleteTransformsAction
@@ -138,6 +143,7 @@ import org.opensearch.jobscheduler.spi.ScheduledJobParser
 import org.opensearch.jobscheduler.spi.ScheduledJobRunner
 import org.opensearch.monitor.jvm.JvmService
 import org.opensearch.plugins.ActionPlugin
+import org.opensearch.plugins.ExtensiblePlugin
 import org.opensearch.plugins.NetworkPlugin
 import org.opensearch.plugins.Plugin
 import org.opensearch.repositories.RepositoriesService
@@ -152,7 +158,7 @@ import org.opensearch.watcher.ResourceWatcherService
 import java.util.function.Supplier
 
 @Suppress("TooManyFunctions")
-class IndexManagementPlugin : JobSchedulerExtension, NetworkPlugin, ActionPlugin, Plugin() {
+class IndexManagementPlugin : JobSchedulerExtension, NetworkPlugin, ActionPlugin, ExtensiblePlugin, Plugin() {
 
     private val logger = LogManager.getLogger(javaClass)
     lateinit var indexManagementIndices: IndexManagementIndices
@@ -160,6 +166,10 @@ class IndexManagementPlugin : JobSchedulerExtension, NetworkPlugin, ActionPlugin
     lateinit var indexNameExpressionResolver: IndexNameExpressionResolver
     lateinit var rollupInterceptor: RollupInterceptor
     lateinit var fieldCapsFilter: FieldCapsFilter
+    lateinit var indexMetadataProvider: org.opensearch.indexmanagement.indexstatemanagement.IndexMetadataProvider
+    private val clusterEventHandlers: MutableList<ClusterEventHandler> = mutableListOf()
+    private val ismActions: MutableList<Action> = mutableListOf()
+    private val metadataProviders = mutableMapOf<String, IndexMetadataService>()
 
     companion object {
         const val PLUGINS_BASE_URI = "/_plugins"
@@ -188,6 +198,19 @@ class IndexManagementPlugin : JobSchedulerExtension, NetworkPlugin, ActionPlugin
 
     override fun getGuiceServiceClasses(): Collection<Class<out LifecycleComponent?>> {
         return mutableListOf<Class<out LifecycleComponent?>>(GuiceHolder::class.java)
+    }
+
+    override fun loadExtensions(loader: ExtensiblePlugin.ExtensionLoader) {
+        super.loadExtensions(loader)
+        val extensions: List<IndexManagementExtension> = loader.loadExtensions(IndexManagementExtension::class.java)
+        extensions.forEach { extension ->
+            val indexType = extension.getIndexType()
+            if (indexType != null) {
+                metadataProviders[indexType] = extension.getMetadataProvider()
+            }
+            clusterEventHandlers.addAll(extension.getClusterEventHandlers())
+            ismActions.addAll(extension.getISMActions())
+        }
     }
 
     @Suppress("ComplexMethod")
@@ -319,6 +342,8 @@ class IndexManagementPlugin : JobSchedulerExtension, NetworkPlugin, ActionPlugin
                 indexManagementIndices
             )
 
+        indexMetadataProvider = IndexMetadataProvider(client, clusterService, metadataProviders)
+
         val managedIndexRunner = ManagedIndexRunner
             .registerClient(client)
             .registerClusterService(clusterService)
@@ -335,11 +360,17 @@ class IndexManagementPlugin : JobSchedulerExtension, NetworkPlugin, ActionPlugin
 
         val managedIndexCoordinator = ManagedIndexCoordinator(
             environment.settings(),
-            client, clusterService, threadPool, indexManagementIndices, metadataService
+            client, clusterService, threadPool, indexManagementIndices, metadataService, clusterEventHandlers
         )
 
         return listOf(
-            managedIndexRunner, rollupRunner, transformRunner, indexManagementIndices, managedIndexCoordinator, indexStateManagementHistory
+            managedIndexRunner,
+            rollupRunner,
+            transformRunner,
+            indexManagementIndices,
+            managedIndexCoordinator,
+            indexStateManagementHistory,
+            indexMetadataProvider
         )
     }
 

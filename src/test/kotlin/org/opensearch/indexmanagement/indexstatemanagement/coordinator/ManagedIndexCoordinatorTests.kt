@@ -68,7 +68,7 @@ class ManagedIndexCoordinatorTests : OpenSearchAllocationTestCase() {
         val originClusterService: ClusterService = ClusterServiceUtils.createClusterService(threadPool, discoveryNode, clusterSettings)
         clusterService = Mockito.spy(originClusterService)
 
-        coordinator = ManagedIndexCoordinator(settings, client, clusterService, threadPool, indexManagementIndices, metadataService)
+        coordinator = ManagedIndexCoordinator(settings, client, clusterService, threadPool, indexManagementIndices, metadataService, listOf())
     }
 
     fun `test after start`() {

@@ -1,0 +1,80 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * The OpenSearch Contributors require contributions made to
+ * this file be licensed under the Apache-2.0 license or a
+ * compatible open source license.
+ *
+ * Modifications Copyright OpenSearch Contributors. See
+ * GitHub history for details.
+ */
+
+import org.opensearch.gradle.test.RestIntegTestTask
+
+apply plugin: 'opensearch.opensearchplugin'
+apply plugin: 'opensearch.java'
+apply plugin: 'opensearch.testclusters'
+apply plugin: 'opensearch.java-rest-test'
+apply plugin: 'kotlin'
+apply plugin: 'org.jetbrains.kotlin.jvm'
+apply plugin: 'org.jetbrains.kotlin.plugin.allopen'
+
+opensearchplugin {
+    name 'opensearch-index-management-extension'
+    description 'sample plugin that extends index management plugin'
+    classname 'org.opensearch.indexmanagement.sampleextension.SampleExtensionPlugin'
+    extendedPlugins = ['opensearch-index-management']
+}
+
+ext {
+    projectSubstitutions = [:]
+    licenseFile = rootProject.file('LICENSE')
+    noticeFile = rootProject.file('NOTICE')
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+configurations.all {
+    if (it.state != Configuration.State.UNRESOLVED) return
+    resolutionStrategy {
+        force "org.jetbrains.kotlin:kotlin-stdlib:${kotlin_version}"
+        force "org.jetbrains.kotlin:kotlin-stdlib-common:${kotlin_version}"
+    }
+}
+
+dependencies {
+    compileOnly "org.opensearch:opensearch:${opensearch_version}"
+    compileOnly "org.jetbrains.kotlin:kotlin-stdlib:${kotlin_version}"
+    compileOnly "org.jetbrains.kotlin:kotlin-stdlib-common:${kotlin_version}"
+    compileOnly "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlin_version}"
+    compileOnly "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.9"
+    compileOnly project(path: ":${rootProject.name}-spi", configuration: 'shadow')
+
+    testCompile "org.opensearch.test:framework:${opensearch_version}"
+}
+
+licenseHeaders.enabled = true
+dependencyLicenses.enabled = false
+validateNebulaPom.enabled = false
+testingConventions.enabled = false
+loggerUsageCheck.enabled = false
+
+javaRestTest.dependsOn(rootProject.assemble)
+javaRestTest {
+    systemProperty 'tests.security.manager', 'false'
+}
+
+task integTest(type: RestIntegTestTask) {
+    description 'Run integ test with opensearch test framework'
+    group 'verification'
+    systemProperty 'tests.security.manager', 'false'
+    dependsOn test
+}
+check.dependsOn integTest
+
+testClusters.javaRestTest {
+    testDistribution = 'INTEG_TEST'
+}

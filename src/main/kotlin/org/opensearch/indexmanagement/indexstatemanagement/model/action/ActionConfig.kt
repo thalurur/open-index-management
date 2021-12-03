@@ -81,12 +81,12 @@ abstract class ActionConfig(
         @Throws(IOException::class)
         @Suppress("ComplexMethod")
         fun fromStreamInput(sin: StreamInput): ActionConfig {
-            val type = sin.readEnum(ActionType::class.java)
+            val type = sin.readString()
             val actionIndex = sin.readInt()
             val configTimeout = sin.readOptionalWriteable(::ActionTimeout)
             val configRetry = sin.readOptionalWriteable(::ActionRetry)
 
-            val actionConfig: ActionConfig = when (type.type) {
+            val actionConfig: ActionConfig = when (type) {
                 ActionType.DELETE.type -> DeleteActionConfig(actionIndex)
                 ActionType.OPEN.type -> OpenActionConfig(actionIndex)
                 ActionType.CLOSE.type -> CloseActionConfig(actionIndex)
@@ -100,7 +100,7 @@ abstract class ActionConfig(
                 ActionType.INDEX_PRIORITY.type -> IndexPriorityActionConfig(sin)
                 ActionType.ALLOCATION.type -> AllocationActionConfig(sin)
                 ActionType.ROLLUP.type -> RollupActionConfig(sin)
-                else -> throw IllegalArgumentException("Invalid field: [${type.type}] found in Action.")
+                else -> throw IllegalArgumentException("Invalid field: [$type] found in Action.")
             }
 
             actionConfig.configTimeout = configTimeout
