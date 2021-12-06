@@ -8,40 +8,21 @@ package org.opensearch.indexmanagement.spi.indexstatemanagement.model
 
 import org.opensearch.common.io.stream.StreamInput
 import org.opensearch.common.xcontent.XContentParser
-import org.opensearch.common.xcontent.XContentParserUtils.ensureExpectedToken
 
-abstract class ActionParser {
+abstract class ActionParser(customAction: Boolean = false) {
 
-    abstract fun getActionName(): String
+    /**
+     * The action type parser will parse
+     */
+    abstract fun getActionType(): String
 
-    abstract fun parseAction(sin: StreamInput): Action
+    /**
+     * Populate ActionConfig from stream input
+     */
+    abstract fun fromStreamInput(sin: StreamInput): ActionConfig
 
-    abstract fun parseAction(xcp: XContentParser): Action
-
-    fun fromStreamInput(sin: StreamInput): ActionConfig {
-
-    }
-
-    fun fromXContent(xcp: XContentParser, index: Int): ActionConfig {
-        var timeout: ActionTimeout? = null
-        var retry: ActionRetry? = null
-        var action: Action? = null
-
-        ensureExpectedToken(XContentParser.Token.START_OBJECT, xcp.currentToken(), xcp)
-        while (xcp.nextToken() != XContentParser.Token.END_OBJECT) {
-            val fieldName = xcp.currentName()
-            xcp.nextToken()
-
-            when (fieldName) {
-                TIMEOUT_FIELD -> timeout = ActionTimeout.parse(xcp)
-                RETRY_FIELD -> retry = ActionRetry.parse(xcp)
-                getActionName() -> action = parseAction(xcp)
-            }
-        }
-    }
-
-    companion object {
-        const val TIMEOUT_FIELD = "timeout"
-        const val RETRY_FIELD = "retry"
-    }
+    /**
+     * Populate ActionConfig from xContent
+     */
+    abstract fun fromXContent(xcp: XContentParser, index: Int): ActionConfig
 }

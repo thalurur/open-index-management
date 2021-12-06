@@ -11,12 +11,9 @@
 
 package org.opensearch.indexmanagement.spi.indexstatemanagement.model
 
-import org.opensearch.common.io.stream.Writeable
-import org.opensearch.common.xcontent.ToXContentFragment
-
 abstract class Action(
-    val name: String
-): Writeable, ToXContentFragment {
+    val config: ActionConfig
+) {
 
     abstract fun getSteps(): List<Step>
 

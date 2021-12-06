@@ -6,8 +6,17 @@
 
 package org.opensearch.indexmanagement.spi.indexstatemanagement.model
 
-// TODO: Add more here - probably user context
+import org.opensearch.client.Client
+import org.opensearch.cluster.service.ClusterService
+import org.opensearch.common.util.concurrent.ThreadContext
+import org.opensearch.commons.authuser.User
+
+// TODO: Add more attributes here if needed
 class StepContext(
-    val metadata: ManagedIndexMetadata
+    val metadata: ManagedIndexMetaData,
+    val clusterService: ClusterService,
+    val client: Client,
+    val threadContext: ThreadContext?,
+    val user: User?
 ) {
 }

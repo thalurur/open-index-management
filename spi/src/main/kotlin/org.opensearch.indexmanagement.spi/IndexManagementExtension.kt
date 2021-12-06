@@ -11,16 +11,14 @@
 
 package org.opensearch.indexmanagement.spi
 
-import org.opensearch.indexmanagement.spi.indexstatemanagement.model.Action
 import org.opensearch.indexmanagement.spi.indexstatemanagement.IndexMetadataService
 import org.opensearch.indexmanagement.spi.indexstatemanagement.ClusterEventHandler
+import org.opensearch.indexmanagement.spi.indexstatemanagement.model.ActionParser
 
 /**
  * SPI for IndexManagement
  */
 interface IndexManagementExtension {
-
-    abstract fun getISMActions(): List<Action>
 
     /**
      * List of action parsers that are supported by the extension, each of the action parser will parse the policy action into the defined action.
@@ -28,12 +26,16 @@ interface IndexManagementExtension {
      */
     abstract fun getISMActionParsers(): List<ActionParser>
 
-    abstract fun getMetadataService(): IndexMetadataService
+    abstract fun getIndexMetadataService(): Map<String, IndexMetadataService>
 
-    /**
-     * The index type extension is registering the metadata service. Each ISM Action can save the index type after the action is executed.
-     */
-    abstract fun getIndexType(): String?
+    abstract fun getClusterEventHandlers(): Map<ClusterEventType, ClusterEventHandler>
+}
 
-    abstract fun getClusterEventHandlers(): List<ClusterEventHandler>
+enum class ClusterEventType(val type: String) {
+    CREATE("create"),
+    DELETE("delete");
+
+    override fun toString(): String {
+        return type
+    }
 }

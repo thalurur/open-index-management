@@ -4,35 +4,36 @@
  *
  */
 
-package org.opensearch.indexmanagement.sampleextension
+package org.opensearch.indexmanagement.indexstatemanagement.model.newaction
 
 import org.opensearch.common.io.stream.StreamOutput
 import org.opensearch.common.xcontent.ToXContent
 import org.opensearch.common.xcontent.ToXContentObject
 import org.opensearch.common.xcontent.XContentBuilder
+import org.opensearch.indexmanagement.indexstatemanagement.newaction.DeleteAction
 import org.opensearch.indexmanagement.spi.indexstatemanagement.model.Action
 import org.opensearch.indexmanagement.spi.indexstatemanagement.model.ActionConfig
 
-class DeleteActionConfig(actionIndex: Int) : ToXContentObject, ActionConfig(DELETE, actionIndex) {
+class DeleteActionConfig(val index: Int) : ToXContentObject, ActionConfig(type, index) {
+
+    override fun toXContent(builder: XContentBuilder, params: ToXContent.Params): XContentBuilder {
+        builder.startObject()
+        super.toXContent(builder, params)
+            .startObject(type)
+        return builder.endObject().endObject()
+    }
 
     override fun toAction(): Action {
         return DeleteAction(this)
     }
 
-    override fun isFragment(): Boolean = false
-
-    override fun toXContent(builder: XContentBuilder, params: ToXContent.Params): XContentBuilder {
-        builder.startObject()
-        super.toXContent(builder, params)
-                .startObject(DELETE)
-        return builder.endObject().endObject()
-    }
-
     override fun writeTo(out: StreamOutput) {
-        out.writeInt(actionIndex)
+        out.writeInt(index)
     }
+
+    override fun isFragment(): Boolean = super<ToXContentObject>.isFragment()
 
     companion object {
-        const val DELETE = "delete"
+        const val type = "delete"
     }
 }

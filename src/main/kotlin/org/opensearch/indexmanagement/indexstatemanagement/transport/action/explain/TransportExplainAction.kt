@@ -34,12 +34,12 @@ import org.opensearch.index.IndexNotFoundException
 import org.opensearch.index.query.Operator
 import org.opensearch.index.query.QueryBuilders
 import org.opensearch.indexmanagement.IndexManagementPlugin.Companion.INDEX_MANAGEMENT_INDEX
+import org.opensearch.indexmanagement.indexstatemanagement.IndexMetadataProvider
 import org.opensearch.indexmanagement.indexstatemanagement.ManagedIndexCoordinator.Companion.MAX_HITS
 import org.opensearch.indexmanagement.indexstatemanagement.model.ManagedIndexMetaData
 import org.opensearch.indexmanagement.indexstatemanagement.opensearchapi.getManagedIndexMetadata
 import org.opensearch.indexmanagement.indexstatemanagement.transport.action.managedIndex.ManagedIndexAction
 import org.opensearch.indexmanagement.indexstatemanagement.transport.action.managedIndex.ManagedIndexRequest
-import org.opensearch.indexmanagement.indexstatemanagement.util.isMetadataMoved
 import org.opensearch.indexmanagement.indexstatemanagement.util.managedIndexMetadataID
 import org.opensearch.indexmanagement.util.SecurityUtils.Companion.buildUser
 import org.opensearch.search.builder.SearchSourceBuilder
@@ -57,7 +57,8 @@ class TransportExplainAction @Inject constructor(
     transportService: TransportService,
     actionFilters: ActionFilters,
     val clusterService: ClusterService,
-    val xContentRegistry: NamedXContentRegistry
+    val xContentRegistry: NamedXContentRegistry,
+    val indexMetadataProvider: IndexMetadataProvider
 ) : HandledTransportAction<ExplainRequest, ExplainResponse>(
     ExplainAction.NAME, transportService, actionFilters, ::ExplainRequest
 ) {
@@ -279,10 +280,11 @@ class TransportExplainAction @Inject constructor(
                         managedIndexMetadata = ManagedIndexMetaData.fromMap(managedIndexMetadataMap)
                     }
 
-                    if (!isMetadataMoved(clusterStateMetadata, configIndexMetadataMap, log)) {
+                    // TODO: Fix this later
+                    /*if (!isMetadataMoved(clusterStateMetadata, configIndexMetadataMap, log)) {
                         val info = mapOf("message" to "Metadata is pending migration")
                         managedIndexMetadata = clusterStateMetadata?.copy(info = info)
-                    }
+                    }*/
                 }
                 indexMetadatas.add(managedIndexMetadata)
             }

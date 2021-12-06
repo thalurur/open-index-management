@@ -140,7 +140,6 @@ class TransportAddPolicyAction @Inject constructor(
                 actionListener.onResponse(ISMStatusResponse(0, failedIndices))
                 return
             }
-            indexMetadataProvider.getIndexMetadata("blah", requestedIndices)
             if (user == null) {
                 resolvedIndices.addAll(requestedIndices)
                 getPolicy()

@@ -20,10 +20,12 @@ import org.opensearch.common.settings.SettingsFilter
 import org.opensearch.common.xcontent.NamedXContentRegistry
 import org.opensearch.env.Environment
 import org.opensearch.env.NodeEnvironment
+import org.opensearch.indexmanagement.spi.ClusterEventType
 import org.opensearch.indexmanagement.spi.IndexManagementExtension
 import org.opensearch.indexmanagement.spi.indexstatemanagement.ClusterEventHandler
 import org.opensearch.indexmanagement.spi.indexstatemanagement.IndexMetadataService
 import org.opensearch.indexmanagement.spi.indexstatemanagement.model.Action
+import org.opensearch.indexmanagement.spi.indexstatemanagement.model.ActionParser
 import org.opensearch.plugins.ActionPlugin
 import org.opensearch.plugins.Plugin
 import org.opensearch.repositories.RepositoriesService
@@ -75,19 +77,15 @@ class SampleExtensionPlugin: ActionPlugin, IndexManagementExtension, Plugin() {
         return listOf(SampleExtensionRestHandler())
     }
 
-    override fun getClusterEventHandlers(): List<ClusterEventHandler> {
-        TODO("Not yet implemented")
+    override fun getClusterEventHandlers(): Map<ClusterEventType, ClusterEventHandler> {
+        return mutableMapOf()
     }
 
-    override fun getISMActions(): List<Action> {
-        return listOf()
+    override fun getISMActionParsers(): List<ActionParser> {
+        return listOf(DeleteActionParser())
     }
 
-    override fun getIndexType(): String {
-        return "test"
-    }
-
-    override fun getMetadataProvider(): IndexMetadataService {
-        TODO("Not yet implemented")
+    override fun getIndexMetadataService(): Map<String, IndexMetadataService> {
+        return mapOf()
     }
 }

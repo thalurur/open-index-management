@@ -18,6 +18,7 @@ import org.opensearch.common.xcontent.XContentBuilder
 import org.opensearch.common.xcontent.XContentParser
 import org.opensearch.common.xcontent.XContentParserUtils
 import java.io.IOException
+import java.time.Instant
 import java.util.Locale
 
 data class ActionRetry(
@@ -109,6 +110,25 @@ data class ActionRetry(
 
         override fun toString(): String {
             return type
+        }
+
+        @Suppress("ReturnCount")
+        fun shouldBackoff(actionMetaData: ActionMetaData?, actionRetry: ActionRetry?): Pair<Boolean, Long?> {
+            if (actionMetaData == null || actionRetry == null) {
+                logger.debug("There is no actionMetaData and ActionRetry we don't need to backoff")
+                return Pair(false, null)
+            }
+
+            if (actionMetaData.consumedRetries > 0) {
+                if (actionMetaData.lastRetryTime != null) {
+                    val remainingTime = getNextRetryTime(actionMetaData.consumedRetries, actionRetry.delay) -
+                            (Instant.now().toEpochMilli() - actionMetaData.lastRetryTime)
+
+                    return Pair(remainingTime > 0, remainingTime)
+                }
+            }
+
+            return Pair(false, null)
         }
     }
 }

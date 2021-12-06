@@ -38,6 +38,7 @@ import org.opensearch.indexmanagement.indexstatemanagement.SkipExecution
 import org.opensearch.indexmanagement.indexstatemanagement.model.ManagedIndexConfig
 import org.opensearch.indexmanagement.indexstatemanagement.model.ManagedIndexMetaData
 import org.opensearch.indexmanagement.indexstatemanagement.model.Policy
+import org.opensearch.indexmanagement.indexstatemanagement.model.action.ISMActionsParser
 import org.opensearch.indexmanagement.indexstatemanagement.resthandler.RestAddPolicyAction
 import org.opensearch.indexmanagement.indexstatemanagement.resthandler.RestChangePolicyAction
 import org.opensearch.indexmanagement.indexstatemanagement.resthandler.RestDeletePolicyAction
@@ -107,7 +108,9 @@ import org.opensearch.indexmanagement.rollup.resthandler.RestStopRollupAction
 import org.opensearch.indexmanagement.rollup.settings.LegacyOpenDistroRollupSettings
 import org.opensearch.indexmanagement.rollup.settings.RollupSettings
 import org.opensearch.indexmanagement.settings.IndexManagementSettings
+import org.opensearch.indexmanagement.spi.ClusterEventType
 import org.opensearch.indexmanagement.spi.IndexManagementExtension
+// import org.opensearch.indexmanagement.spi.IndexManagementExtension
 import org.opensearch.indexmanagement.spi.indexstatemanagement.ClusterEventHandler
 import org.opensearch.indexmanagement.spi.indexstatemanagement.IndexMetadataService
 import org.opensearch.indexmanagement.spi.indexstatemanagement.model.Action
@@ -167,7 +170,7 @@ class IndexManagementPlugin : JobSchedulerExtension, NetworkPlugin, ActionPlugin
     lateinit var rollupInterceptor: RollupInterceptor
     lateinit var fieldCapsFilter: FieldCapsFilter
     lateinit var indexMetadataProvider: org.opensearch.indexmanagement.indexstatemanagement.IndexMetadataProvider
-    private val clusterEventHandlers: MutableList<ClusterEventHandler> = mutableListOf()
+    private val clusterEventHandlers = mutableMapOf<ClusterEventType, ClusterEventHandler>()
     private val ismActions: MutableList<Action> = mutableListOf()
     private val metadataProviders = mutableMapOf<String, IndexMetadataService>()
 
@@ -204,12 +207,11 @@ class IndexManagementPlugin : JobSchedulerExtension, NetworkPlugin, ActionPlugin
         super.loadExtensions(loader)
         val extensions: List<IndexManagementExtension> = loader.loadExtensions(IndexManagementExtension::class.java)
         extensions.forEach { extension ->
-            val indexType = extension.getIndexType()
-            if (indexType != null) {
-                metadataProviders[indexType] = extension.getMetadataProvider()
+            metadataProviders.putAll(extension.getIndexMetadataService())
+            clusterEventHandlers.putAll(extension.getClusterEventHandlers())
+            extension.getISMActionParsers().forEach {
+                ISMActionsParser.instance.addParser(it)
             }
-            clusterEventHandlers.addAll(extension.getClusterEventHandlers())
-            ismActions.addAll(extension.getISMActions())
         }
     }
 

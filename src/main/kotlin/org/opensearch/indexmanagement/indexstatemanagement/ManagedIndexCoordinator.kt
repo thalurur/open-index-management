@@ -77,8 +77,8 @@ import org.opensearch.indexmanagement.opensearchapi.parseWithType
 import org.opensearch.indexmanagement.opensearchapi.retry
 import org.opensearch.indexmanagement.opensearchapi.suspendUntil
 import org.opensearch.indexmanagement.opensearchapi.withClosableContext
+import org.opensearch.indexmanagement.spi.ClusterEventType
 import org.opensearch.indexmanagement.spi.indexstatemanagement.ClusterEventHandler
-import org.opensearch.indexmanagement.spi.indexstatemanagement.model.Decision
 import org.opensearch.indexmanagement.util.NO_ID
 import org.opensearch.indexmanagement.util.OpenForTesting
 import org.opensearch.rest.RestStatus
@@ -110,7 +110,7 @@ class ManagedIndexCoordinator(
     private val threadPool: ThreadPool,
     indexManagementIndices: IndexManagementIndices,
     private val metadataService: MetadataService,
-    private val clusterEventHandlers: List<ClusterEventHandler>
+    private val clusterEventHandlers: Map<ClusterEventType, ClusterEventHandler>
 ) : ClusterStateListener,
     CoroutineScope by CoroutineScope(SupervisorJob() + Dispatchers.Default + CoroutineName("ManagedIndexCoordinator")),
     LifecycleListener() {
@@ -288,18 +288,21 @@ class ManagedIndexCoordinator(
     }
 
     private fun shouldProcessDeleteEvent(event: ClusterChangedEvent): Boolean {
-        val decisions = mutableListOf<Decision>()
-        clusterEventHandlers.forEach { handler ->
-            decisions.add(handler.processIndexDeleteEvent(client, clusterService, event))
+        clusterEventHandlers.filter { type -> type.key == ClusterEventType.CREATE }.forEach { (_, handler) ->
+            val decision = handler.processEvent(client, clusterService, event)
+            if (!decision.shouldProcess) {
+                return false
+            }
         }
-
         return true
     }
 
     private fun shouldProcessCreateEvent(event: ClusterChangedEvent): Boolean {
-        val decisions = mutableListOf<Decision>()
-        clusterEventHandlers.forEach { handler ->
-            decisions.add(handler.processIndexCreateEvent(client, clusterService, event))
+        clusterEventHandlers.filter { type -> type.key == ClusterEventType.DELETE }.forEach { (_, handler) ->
+            val decision = handler.processEvent(client, clusterService, event)
+            if (!decision.shouldProcess) {
+                return false
+            }
         }
 
         return true

@@ -7,9 +7,7 @@
 
 package org.opensearch.indexmanagement.sampleextension
 
-import org.opensearch.client.Client
-import org.opensearch.cluster.service.ClusterService
-import org.opensearch.indexmanagement.spi.indexstatemanagement.model.ManagedIndexMetadata
+import org.opensearch.indexmanagement.spi.indexstatemanagement.model.ManagedIndexMetaData
 import org.opensearch.indexmanagement.spi.indexstatemanagement.model.Step
 import org.opensearch.indexmanagement.spi.indexstatemanagement.model.StepContext
 
@@ -19,11 +17,11 @@ class AttemptDeleteStep: Step(name) {
         const val name = "attempt_delete"
     }
 
-    override suspend fun execute(clusterService: ClusterService, client: Client, context: StepContext): Step {
+    override suspend fun execute(context: StepContext): Step {
         TODO("Not yet implemented")
     }
 
-    override fun getUpdatedManagedIndexMetadata(currentMetadata: ManagedIndexMetadata): ManagedIndexMetadata {
+    override fun getUpdatedManagedIndexMetadata(currentMetadata: ManagedIndexMetaData): ManagedIndexMetaData {
         TODO("Not yet implemented")
     }
 
