@@ -285,22 +285,22 @@ fun Action.getUpdatedActionMetaData(managedIndexMetaData: ManagedIndexMetaData, 
     return when {
         // start a new action
         stateMetaData?.name != state.name ->
-            ActionMetaData(this.config.type, Instant.now().toEpochMilli(), this.config.actionIndex, false, 0, 0, null)
-        actionMetaData?.index != this.config.actionIndex ->
-            ActionMetaData(this.config.type, Instant.now().toEpochMilli(), this.config.actionIndex, false, 0, 0, null)
+            ActionMetaData(this.type, Instant.now().toEpochMilli(), this.actionIndex, false, 0, 0, null)
+        actionMetaData?.index != this.actionIndex ->
+            ActionMetaData(this.type, Instant.now().toEpochMilli(), this.actionIndex, false, 0, 0, null)
         // RetryAPI will reset startTime to null for actionMetaData and we'll reset it to "now" here
         else -> actionMetaData.copy(startTime = actionMetaData.startTime ?: Instant.now().toEpochMilli())
     }
 }
 
 fun Action.shouldBackoff(actionMetaData: ActionMetaData?, actionRetry: ActionRetry?): Pair<Boolean, Long?>? {
-    return this.config.configRetry?.backoff?.shouldBackoff(actionMetaData, actionRetry)
+    return this.configRetry?.backoff?.shouldBackoff(actionMetaData, actionRetry)
 }
 
 @Suppress("ReturnCount")
 fun Action.hasTimedOut(actionMetaData: ActionMetaData?): Boolean {
     val startTime = actionMetaData?.startTime
-    val configTimeout = this.config.configTimeout
+    val configTimeout = this.configTimeout
     if (startTime == null || configTimeout == null) return false
     return (Instant.now().toEpochMilli() - startTime) > configTimeout.timeout.millis
 }
@@ -336,7 +336,7 @@ fun ManagedIndexMetaData.getStartingManagedIndexMetaData(
         stateMetaData = updatedStateMetaData,
         actionMetaData = updatedActionMetaData,
         stepMetaData = updatedStepMetaData,
-        info = mapOf("message" to "Starting action ${action.config.type} and working on ${step.name}")
+        info = mapOf("message" to "Starting action ${action.type} and working on ${step.name}")
     )
 }
 
@@ -353,8 +353,8 @@ fun ManagedIndexMetaData.getCompletedManagedIndexMetaData(
 
     val updatedActionMetaData = if (updatedStepMetaData.stepMetaData?.stepStatus == Step.StepStatus.FAILED) {
         when {
-            action.config.configRetry == null -> actionMetaData.copy(failed = true)
-            actionMetaData.consumedRetries >= action.config.configRetry!!.count -> actionMetaData.copy(failed = true)
+            action.configRetry == null -> actionMetaData.copy(failed = true)
+            actionMetaData.consumedRetries >= action.configRetry!!.count -> actionMetaData.copy(failed = true)
             else -> actionMetaData.copy(
                 failed = false,
                 consumedRetries = actionMetaData.consumedRetries + 1,
@@ -419,7 +419,7 @@ fun ManagedIndexConfig.shouldChangePolicy(managedIndexMetaData: ManagedIndexMeta
     // we need this in so that we can change policy before the first transition happens so policy doesnt get completed
     // before we have a chance to change policy
     // TODO: change to constant
-    if (actionToExecute?.config?.type == "transition") {
+    if (actionToExecute?.type == "transition") {
         return true
     }
 
@@ -485,7 +485,7 @@ fun Policy.isSafeToChange(stateName: String?, newPolicy: Policy, changePolicy: C
 /**
  * Allowed actions are ones that are specified in the [ManagedIndexSettings.ALLOW_LIST] setting.
  */
-fun Action.isAllowed(allowList: List<String>): Boolean = allowList.contains(this.config.type)
+fun Action.isAllowed(allowList: List<String>): Boolean = allowList.contains(this.type)
 
 /**
  * Check if cluster state metadata has been moved to config index

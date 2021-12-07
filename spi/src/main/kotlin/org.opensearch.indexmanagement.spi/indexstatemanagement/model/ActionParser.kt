@@ -19,10 +19,10 @@ abstract class ActionParser(customAction: Boolean = false) {
     /**
      * Populate ActionConfig from stream input
      */
-    abstract fun fromStreamInput(sin: StreamInput): ActionConfig
+    abstract fun fromStreamInput(sin: StreamInput): Action
 
     /**
      * Populate ActionConfig from xContent
      */
-    abstract fun fromXContent(xcp: XContentParser, index: Int): ActionConfig
+    abstract fun fromXContent(xcp: XContentParser, index: Int): Action
 }

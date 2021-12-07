@@ -110,10 +110,8 @@ import org.opensearch.indexmanagement.rollup.settings.RollupSettings
 import org.opensearch.indexmanagement.settings.IndexManagementSettings
 import org.opensearch.indexmanagement.spi.ClusterEventType
 import org.opensearch.indexmanagement.spi.IndexManagementExtension
-// import org.opensearch.indexmanagement.spi.IndexManagementExtension
 import org.opensearch.indexmanagement.spi.indexstatemanagement.ClusterEventHandler
 import org.opensearch.indexmanagement.spi.indexstatemanagement.IndexMetadataService
-import org.opensearch.indexmanagement.spi.indexstatemanagement.model.Action
 import org.opensearch.indexmanagement.transform.TransformRunner
 import org.opensearch.indexmanagement.transform.action.delete.DeleteTransformsAction
 import org.opensearch.indexmanagement.transform.action.delete.TransportDeleteTransformsAction
@@ -171,7 +169,6 @@ class IndexManagementPlugin : JobSchedulerExtension, NetworkPlugin, ActionPlugin
     lateinit var fieldCapsFilter: FieldCapsFilter
     lateinit var indexMetadataProvider: org.opensearch.indexmanagement.indexstatemanagement.IndexMetadataProvider
     private val clusterEventHandlers = mutableMapOf<ClusterEventType, ClusterEventHandler>()
-    private val ismActions: MutableList<Action> = mutableListOf()
     private val metadataProviders = mutableMapOf<String, IndexMetadataService>()
 
     companion object {

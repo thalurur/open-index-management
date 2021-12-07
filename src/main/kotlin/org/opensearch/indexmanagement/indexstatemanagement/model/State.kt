@@ -17,14 +17,13 @@ import org.opensearch.common.xcontent.XContentParserUtils.ensureExpectedToken
 import org.opensearch.indexmanagement.indexstatemanagement.model.action.ISMActionsParser
 import org.opensearch.indexmanagement.indexstatemanagement.model.newaction.TransitionsActionConfig
 import org.opensearch.indexmanagement.spi.indexstatemanagement.model.Action
-import org.opensearch.indexmanagement.spi.indexstatemanagement.model.ActionConfig
 import org.opensearch.indexmanagement.spi.indexstatemanagement.model.ManagedIndexMetaData
 import org.opensearch.indexmanagement.spi.indexstatemanagement.model.Step
 import java.io.IOException
 
 data class State(
     val name: String,
-    val actions: List<ActionConfig>,
+    val actions: List<Action>,
     val transitions: List<Transition>
 ) : ToXContentObject, Writeable {
 
@@ -69,7 +68,7 @@ data class State(
     fun getActionToExecute(
         managedIndexMetaData: ManagedIndexMetaData
     ): Action? {
-        var actionConfig: ActionConfig?
+        var actionConfig: Action?
         val actionMetaData = managedIndexMetaData.actionMetaData
         // If we are transitioning to this state get the first action in the state
         // If the action/actionIndex are null it means we just initialized and should get the first action from the state
@@ -89,14 +88,14 @@ data class State(
             // TODO: Refactor so we can get isLastStep from somewhere besides an instantiated Action class so we can simplify this to a when block
             // If stepCompleted is true and this is the last step of the action then we should get the next action
             if (stepMetaData != null && stepMetaData.stepStatus == Step.StepStatus.COMPLETED) {
-                val action = actionConfig.toAction()
+                val action = actionConfig
                 if (action.isLastStep(stepMetaData.name)) {
                     actionConfig = this.actions.getOrNull(actionMetaData.index + 1) ?: TransitionsActionConfig(this.transitions)
                 }
             }
         }
 
-        return actionConfig.toAction()
+        return actionConfig
     }
 
     companion object {
@@ -108,7 +107,7 @@ data class State(
         @Throws(IOException::class)
         fun parse(xcp: XContentParser): State {
             var name: String? = null
-            val actions: MutableList<ActionConfig> = mutableListOf()
+            val actions: MutableList<Action> = mutableListOf()
             val transitions: MutableList<Transition> = mutableListOf()
 
             ensureExpectedToken(Token.START_OBJECT, xcp.currentToken(), xcp)

@@ -6,32 +6,18 @@
 
 package org.opensearch.indexmanagement.indexstatemanagement.model.newaction
 
-import org.opensearch.common.io.stream.StreamOutput
-import org.opensearch.common.xcontent.ToXContent
-import org.opensearch.common.xcontent.ToXContentObject
-import org.opensearch.common.xcontent.XContentBuilder
-import org.opensearch.indexmanagement.indexstatemanagement.newaction.DeleteAction
+import org.opensearch.indexmanagement.indexstatemanagement.step.newdelete.AttemptDeleteStep
 import org.opensearch.indexmanagement.spi.indexstatemanagement.model.Action
-import org.opensearch.indexmanagement.spi.indexstatemanagement.model.ActionConfig
+import org.opensearch.indexmanagement.spi.indexstatemanagement.model.Step
 
-class DeleteActionConfig(val index: Int) : ToXContentObject, ActionConfig(type, index) {
+class DeleteActionConfig(val index: Int) : Action(type, index) {
 
-    override fun toXContent(builder: XContentBuilder, params: ToXContent.Params): XContentBuilder {
-        builder.startObject()
-        super.toXContent(builder, params)
-            .startObject(type)
-        return builder.endObject().endObject()
-    }
+    private val attemptDeleteStep = AttemptDeleteStep()
+    private val steps = listOf(attemptDeleteStep)
 
-    override fun toAction(): Action {
-        return DeleteAction(this)
-    }
+    override fun getStepToExecute(): Step = attemptDeleteStep
 
-    override fun writeTo(out: StreamOutput) {
-        out.writeInt(index)
-    }
-
-    override fun isFragment(): Boolean = super<ToXContentObject>.isFragment()
+    override fun getSteps(): List<Step> = steps
 
     companion object {
         const val type = "delete"

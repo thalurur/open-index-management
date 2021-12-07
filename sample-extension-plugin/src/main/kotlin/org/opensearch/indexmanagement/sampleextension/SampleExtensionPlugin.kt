@@ -24,7 +24,6 @@ import org.opensearch.indexmanagement.spi.ClusterEventType
 import org.opensearch.indexmanagement.spi.IndexManagementExtension
 import org.opensearch.indexmanagement.spi.indexstatemanagement.ClusterEventHandler
 import org.opensearch.indexmanagement.spi.indexstatemanagement.IndexMetadataService
-import org.opensearch.indexmanagement.spi.indexstatemanagement.model.Action
 import org.opensearch.indexmanagement.spi.indexstatemanagement.model.ActionParser
 import org.opensearch.plugins.ActionPlugin
 import org.opensearch.plugins.Plugin

@@ -6,22 +6,21 @@
 
 package org.opensearch.indexmanagement.indexstatemanagement.model.newaction
 
-import org.opensearch.common.io.stream.StreamOutput
 import org.opensearch.indexmanagement.indexstatemanagement.model.Transition
-import org.opensearch.indexmanagement.indexstatemanagement.newaction.TransitionsAction
+import org.opensearch.indexmanagement.indexstatemanagement.step.newtransition.AttemptTransitionStep
 import org.opensearch.indexmanagement.spi.indexstatemanagement.model.Action
-import org.opensearch.indexmanagement.spi.indexstatemanagement.model.ActionConfig
+import org.opensearch.indexmanagement.spi.indexstatemanagement.model.Step
 
-class TransitionsActionConfig(val transitions: List<Transition>) : ActionConfig(type, -1) {
+class TransitionsActionConfig(val transitions: List<Transition>) : Action(type, -1) {
 
     companion object {
         const val type = "transition"
     }
 
-    override fun toAction(): Action {
-        return TransitionsAction(this)
-    }
+    private val attemptTransitionStep = AttemptTransitionStep(this)
+    private val steps = listOf(attemptTransitionStep)
 
-    override fun writeTo(out: StreamOutput) {
-    }
+    override fun getStepToExecute(): Step = attemptTransitionStep
+
+    override fun getSteps(): List<Step> = steps
 }

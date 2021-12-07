@@ -11,7 +11,7 @@ import org.opensearch.common.io.stream.StreamInput
 import org.opensearch.common.xcontent.XContentParser
 import org.opensearch.common.xcontent.XContentParserUtils
 import org.opensearch.indexmanagement.indexstatemanagement.model.newaction.DeleteActionParser
-import org.opensearch.indexmanagement.spi.indexstatemanagement.model.ActionConfig
+import org.opensearch.indexmanagement.spi.indexstatemanagement.model.Action
 import org.opensearch.indexmanagement.spi.indexstatemanagement.model.ActionParser
 import org.opensearch.indexmanagement.spi.indexstatemanagement.model.ActionRetry
 import org.opensearch.indexmanagement.spi.indexstatemanagement.model.ActionTimeout
@@ -31,47 +31,47 @@ class ISMActionsParser private constructor() {
         parsers.add(parser)
     }
 
-    fun fromStreamInput(sin: StreamInput): ActionConfig {
-        val action: String = sin.readString()
+    fun fromStreamInput(sin: StreamInput): Action {
+        val type: String = sin.readString()
         val configTimeout = sin.readOptionalWriteable(::ActionTimeout)
         val configRetry = sin.readOptionalWriteable(::ActionRetry)
-        val parser = parsers.firstOrNull { it.getActionType() == action }
-        val actionConfig: ActionConfig = parser?.fromStreamInput(sin) ?: throw IllegalArgumentException("Invalid field: [$action] found in Actions.")
+        val parser = parsers.firstOrNull { it.getActionType() == type }
+        val action: Action = parser?.fromStreamInput(sin) ?: throw IllegalArgumentException("Invalid field: [$type] found in Actions.")
 
-        actionConfig.configTimeout = configTimeout
-        actionConfig.configRetry = configRetry
+        action.configTimeout = configTimeout
+        action.configRetry = configRetry
 
-        return actionConfig
+        return action
     }
 
-    fun parse(xcp: XContentParser, totalActions: Int): ActionConfig {
-        var actionConfig: ActionConfig? = null
+    fun parse(xcp: XContentParser, totalActions: Int): Action {
+        var action: Action? = null
         var timeout: ActionTimeout? = null
         var retry: ActionRetry? = null
         XContentParserUtils.ensureExpectedToken(XContentParser.Token.START_OBJECT, xcp.currentToken(), xcp)
         while (xcp.nextToken() != XContentParser.Token.END_OBJECT) {
-            val action = xcp.currentName()
+            val type = xcp.currentName()
             xcp.nextToken()
-            when (action) {
+            when (type) {
                 ActionTimeout.TIMEOUT_FIELD -> timeout = ActionTimeout.parse(xcp)
                 ActionRetry.RETRY_FIELD -> retry = ActionRetry.parse(xcp)
                 else -> {
-                    val parser = parsers.firstOrNull { it.getActionType() == action }
+                    val parser = parsers.firstOrNull { it.getActionType() == type }
                     if (parser != null) {
-                        actionConfig = parser.fromXContent(xcp, totalActions)
+                        action = parser.fromXContent(xcp, totalActions)
                     } else {
-                        throw IllegalArgumentException("Invalid field: [$action] found in Actions.")
+                        throw IllegalArgumentException("Invalid field: [$type] found in Actions.")
                     }
                 }
             }
         }
 
-        requireNotNull(actionConfig) { "ActionConfig inside state is null" }
+        requireNotNull(action) { "Action inside state is null" }
 
-        actionConfig.configTimeout = timeout
-        actionConfig.configRetry = retry
+        action.configTimeout = timeout
+        action.configRetry = retry
 
-        return actionConfig
+        return action
     }
 
     companion object {

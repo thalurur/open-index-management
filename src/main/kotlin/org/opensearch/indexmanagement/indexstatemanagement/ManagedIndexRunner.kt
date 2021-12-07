@@ -41,7 +41,6 @@ import org.opensearch.indexmanagement.IndexManagementIndices
 import org.opensearch.indexmanagement.IndexManagementPlugin.Companion.INDEX_MANAGEMENT_INDEX
 import org.opensearch.indexmanagement.indexstatemanagement.model.ManagedIndexConfig
 import org.opensearch.indexmanagement.indexstatemanagement.model.Policy
-import org.opensearch.indexmanagement.indexstatemanagement.model.action.ActionConfig
 import org.opensearch.indexmanagement.indexstatemanagement.opensearchapi.getManagedIndexMetadata
 import org.opensearch.indexmanagement.indexstatemanagement.settings.ManagedIndexSettings
 import org.opensearch.indexmanagement.indexstatemanagement.settings.ManagedIndexSettings.Companion.ALLOW_LIST
@@ -284,7 +283,7 @@ object ManagedIndexRunner :
 
         if (action?.hasTimedOut(currentActionMetaData) == true) {
             val info = mapOf("message" to "Action timed out")
-            logger.error("Action=${action.config.type} has timed out")
+            logger.error("Action=${action.type} has timed out")
             val updated = updateManagedIndexMetaData(
                 managedIndexMetaData
                     .copy(actionMetaData = currentActionMetaData?.copy(failed = true), info = info)
@@ -298,7 +297,7 @@ object ManagedIndexRunner :
             return
         }
 
-        val shouldBackOff = action?.shouldBackoff(currentActionMetaData, action.config.configRetry)
+        val shouldBackOff = action?.shouldBackoff(currentActionMetaData, action.configRetry)
         if (shouldBackOff?.first == true) {
             // If we should back off then exit early.
             logger.info("Backoff for retrying. Remaining time ${shouldBackOff.second}")
@@ -323,7 +322,7 @@ object ManagedIndexRunner :
         // If this action is not allowed and the step to be executed is the first step in the action then we will fail
         // as this action has been removed from the AllowList, but if its not the first step we will let it finish as it's already inflight
         if (action?.isAllowed(allowList) == false && action.isFirstStep(step?.name)) {
-            val info = mapOf("message" to "Attempted to execute action=${action.config.type} which is not allowed.")
+            val info = mapOf("message" to "Attempted to execute action=${action.type} which is not allowed.")
             val updated = updateManagedIndexMetaData(
                 managedIndexMetaData.copy(
                     policyRetryInfo = PolicyRetryInfoMetaData(true, 0), info = info
@@ -648,12 +647,13 @@ object ManagedIndexRunner :
         } else {
             // if the action to execute is transition then set the actionMetaData to a new transition metadata to reflect we are
             // in transition (in case we triggered change policy from entering transition) or to reflect this is a new policy transition phase
+            // TODO: replace with constant
             val newTransitionMetaData = ActionMetaData(
-                ActionConfig.ActionType.TRANSITION.type, Instant.now().toEpochMilli(), -1,
+                "transition", Instant.now().toEpochMilli(), -1,
                 false, 0, 0, null
             )
             // TODO: Replace with constant
-            val actionMetaData = if (actionToExecute?.config?.type == "transition") {
+            val actionMetaData = if (actionToExecute?.type == "transition") {
                 newTransitionMetaData
             } else {
                 managedIndexMetaData.actionMetaData
