@@ -2,28 +2,37 @@
  * Copyright OpenSearch Contributors
  * SPDX-License-Identifier: Apache-2.0
  *
+ * com.maddyhome.idea.copyright.pattern.CommentInfo@738da186
  */
 
-package org.opensearch.indexmanagement.spi.indexstatemanagement.model
+package org.opensearch.indexmanagement.spi.indexstatemanagement
 
 import org.apache.logging.log4j.Logger
 import java.util.Locale
 import org.opensearch.common.io.stream.StreamInput
 import org.opensearch.common.io.stream.StreamOutput
 import org.opensearch.common.io.stream.Writeable
+import org.opensearch.indexmanagement.spi.indexstatemanagement.model.ManagedIndexMetaData
+import org.opensearch.indexmanagement.spi.indexstatemanagement.model.StepContext
+import org.opensearch.indexmanagement.spi.indexstatemanagement.model.StepMetaData
 import java.time.Instant
 
 abstract class Step(val name: String, val isSafeToDisableOn: Boolean = true) {
 
+    var context: StepContext? = null
+        private set
+
     fun preExecute(logger: Logger, context: StepContext): Step {
         logger.info("Executing $name for ${context.metadata.index}")
+        this.context = context
         return this
     }
 
-    abstract suspend fun execute(context: StepContext): Step
+    abstract suspend fun execute(): Step
 
-    fun postExecute(logger: Logger, context: StepContext): Step {
-        logger.info("Finished executing $name for ${context.metadata.index}")
+    fun postExecute(logger: Logger): Step {
+        logger.info("Finished executing $name for ${context?.metadata?.index}")
+        this.context = null
         return this
     }
 
@@ -31,7 +40,7 @@ abstract class Step(val name: String, val isSafeToDisableOn: Boolean = true) {
 
     abstract fun isIdempotent(): Boolean
 
-    fun getStepStartTime(metadata: ManagedIndexMetaData): Instant {
+    final fun getStepStartTime(metadata: ManagedIndexMetaData): Instant {
         return when {
             metadata.stepMetaData == null -> Instant.now()
             metadata.stepMetaData.name != this.name -> Instant.now()
@@ -43,7 +52,7 @@ abstract class Step(val name: String, val isSafeToDisableOn: Boolean = true) {
         }
     }
 
-    fun getStartingStepMetaData(metadata: ManagedIndexMetaData): StepMetaData = StepMetaData(name, getStepStartTime(metadata).toEpochMilli(), StepStatus.STARTING)
+    final fun getStartingStepMetaData(metadata: ManagedIndexMetaData): StepMetaData = StepMetaData(name, getStepStartTime(metadata).toEpochMilli(), StepStatus.STARTING)
 
     enum class StepStatus(val status: String) : Writeable {
         STARTING("starting"),

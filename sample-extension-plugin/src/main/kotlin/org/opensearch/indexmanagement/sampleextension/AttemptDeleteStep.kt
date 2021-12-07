@@ -8,8 +8,7 @@
 package org.opensearch.indexmanagement.sampleextension
 
 import org.opensearch.indexmanagement.spi.indexstatemanagement.model.ManagedIndexMetaData
-import org.opensearch.indexmanagement.spi.indexstatemanagement.model.Step
-import org.opensearch.indexmanagement.spi.indexstatemanagement.model.StepContext
+import org.opensearch.indexmanagement.spi.indexstatemanagement.Step
 
 class AttemptDeleteStep: Step(name) {
 
@@ -17,7 +16,7 @@ class AttemptDeleteStep: Step(name) {
         const val name = "attempt_delete"
     }
 
-    override suspend fun execute(context: StepContext): Step {
+    override suspend fun execute(): Step {
         TODO("Not yet implemented")
     }
 

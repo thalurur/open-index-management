@@ -16,9 +16,9 @@ import org.opensearch.common.xcontent.XContentParser.Token
 import org.opensearch.common.xcontent.XContentParserUtils.ensureExpectedToken
 import org.opensearch.indexmanagement.indexstatemanagement.model.action.ISMActionsParser
 import org.opensearch.indexmanagement.indexstatemanagement.model.newaction.TransitionsActionConfig
-import org.opensearch.indexmanagement.spi.indexstatemanagement.model.Action
+import org.opensearch.indexmanagement.spi.indexstatemanagement.Action
+import org.opensearch.indexmanagement.spi.indexstatemanagement.Step
 import org.opensearch.indexmanagement.spi.indexstatemanagement.model.ManagedIndexMetaData
-import org.opensearch.indexmanagement.spi.indexstatemanagement.model.Step
 import java.io.IOException
 
 data class State(

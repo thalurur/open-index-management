@@ -2,14 +2,16 @@
  * Copyright OpenSearch Contributors
  * SPDX-License-Identifier: Apache-2.0
  *
+ * com.maddyhome.idea.copyright.pattern.CommentInfo@6559a54e
  */
 
-package org.opensearch.indexmanagement.spi.indexstatemanagement.model
+package org.opensearch.indexmanagement.spi.indexstatemanagement
 
 import org.opensearch.common.io.stream.StreamInput
 import org.opensearch.common.xcontent.XContentParser
+import org.opensearch.indexmanagement.spi.indexstatemanagement.Action
 
-abstract class ActionParser(customAction: Boolean = false) {
+abstract class ActionParser(var customAction: Boolean = false) {
 
     /**
      * The action type parser will parse
@@ -17,12 +19,12 @@ abstract class ActionParser(customAction: Boolean = false) {
     abstract fun getActionType(): String
 
     /**
-     * Populate ActionConfig from stream input
+     * Deserialize Action from stream input
      */
     abstract fun fromStreamInput(sin: StreamInput): Action
 
     /**
-     * Populate ActionConfig from xContent
+     * Deserialize Action from xContent
      */
     abstract fun fromXContent(xcp: XContentParser, index: Int): Action
 }

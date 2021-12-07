@@ -37,13 +37,13 @@ import org.opensearch.indexmanagement.indexstatemanagement.model.coordinator.Swe
 import org.opensearch.indexmanagement.indexstatemanagement.settings.ManagedIndexSettings
 import org.opensearch.indexmanagement.indexstatemanagement.step.newdelete.AttemptDeleteStep
 import org.opensearch.indexmanagement.opensearchapi.optionalTimeField
-import org.opensearch.indexmanagement.spi.indexstatemanagement.model.Action
+import org.opensearch.indexmanagement.spi.indexstatemanagement.Action
+import org.opensearch.indexmanagement.spi.indexstatemanagement.Step
 import org.opensearch.indexmanagement.spi.indexstatemanagement.model.ActionMetaData
 import org.opensearch.indexmanagement.spi.indexstatemanagement.model.ActionRetry
 import org.opensearch.indexmanagement.spi.indexstatemanagement.model.ManagedIndexMetaData
 import org.opensearch.indexmanagement.spi.indexstatemanagement.model.PolicyRetryInfoMetaData
 import org.opensearch.indexmanagement.spi.indexstatemanagement.model.StateMetaData
-import org.opensearch.indexmanagement.spi.indexstatemanagement.model.Step
 import org.opensearch.jobscheduler.spi.schedule.IntervalSchedule
 import org.opensearch.search.builder.SearchSourceBuilder
 import java.net.InetAddress

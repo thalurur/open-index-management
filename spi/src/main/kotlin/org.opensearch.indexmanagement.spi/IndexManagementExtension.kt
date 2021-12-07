@@ -13,7 +13,7 @@ package org.opensearch.indexmanagement.spi
 
 import org.opensearch.indexmanagement.spi.indexstatemanagement.IndexMetadataService
 import org.opensearch.indexmanagement.spi.indexstatemanagement.ClusterEventHandler
-import org.opensearch.indexmanagement.spi.indexstatemanagement.model.ActionParser
+import org.opensearch.indexmanagement.spi.indexstatemanagement.ActionParser
 
 /**
  * SPI for IndexManagement

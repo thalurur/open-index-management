@@ -18,9 +18,8 @@ import org.opensearch.indexmanagement.indexstatemanagement.util.evaluateConditio
 import org.opensearch.indexmanagement.indexstatemanagement.util.hasStatsConditions
 import org.opensearch.indexmanagement.opensearchapi.getUsefulCauseString
 import org.opensearch.indexmanagement.opensearchapi.suspendUntil
+import org.opensearch.indexmanagement.spi.indexstatemanagement.Step
 import org.opensearch.indexmanagement.spi.indexstatemanagement.model.ManagedIndexMetaData
-import org.opensearch.indexmanagement.spi.indexstatemanagement.model.Step
-import org.opensearch.indexmanagement.spi.indexstatemanagement.model.StepContext
 import org.opensearch.indexmanagement.spi.indexstatemanagement.model.StepMetaData
 import org.opensearch.rest.RestStatus
 import org.opensearch.transport.RemoteTransportException
@@ -40,7 +39,8 @@ class AttemptTransitionStep(val config: TransitionsActionConfig) : Step(name) {
     private var policyCompleted: Boolean = false
     private var info: Map<String, Any>? = null
 
-    override suspend fun execute(context: StepContext): Step {
+    override suspend fun execute(): Step {
+        val context = this.context ?: return this
         val indexName = context.metadata.index
         try {
             if (config.transitions.isEmpty()) {

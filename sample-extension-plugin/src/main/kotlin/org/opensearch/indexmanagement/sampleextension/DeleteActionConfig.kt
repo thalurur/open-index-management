@@ -6,23 +6,22 @@
 
 package org.opensearch.indexmanagement.sampleextension
 
-import org.opensearch.indexmanagement.spi.indexstatemanagement.model.Action
-import org.opensearch.indexmanagement.spi.indexstatemanagement.model.Step
+import org.opensearch.indexmanagement.spi.indexstatemanagement.Action
+import org.opensearch.indexmanagement.spi.indexstatemanagement.Step
+import org.opensearch.indexmanagement.spi.indexstatemanagement.model.StepContext
 
 class DeleteActionConfig(actionIndex: Int): Action(DELETE, actionIndex) {
 
     private val attemptDeleteStep = AttemptDeleteStep()
     private val steps = listOf(attemptDeleteStep)
 
-    override fun getStepToExecute(): Step {
+    override fun getStepToExecute(context: StepContext): Step {
         return attemptDeleteStep
     }
 
     override fun getSteps(): List<Step> {
         return steps
     }
-
-    override fun isFragment(): Boolean = false
 
     companion object {
         const val DELETE = "delete"
