@@ -29,6 +29,7 @@ import org.opensearch.common.xcontent.XContentParser.Token
 import org.opensearch.common.xcontent.XContentParserUtils.ensureExpectedToken
 import org.opensearch.env.Environment
 import org.opensearch.env.NodeEnvironment
+import org.opensearch.indexmanagement.indexstatemanagement.ISMMetadataProvider
 import org.opensearch.indexmanagement.indexstatemanagement.IndexStateManagementHistory
 import org.opensearch.indexmanagement.indexstatemanagement.ManagedIndexCoordinator
 import org.opensearch.indexmanagement.indexstatemanagement.ManagedIndexRunner
@@ -105,6 +106,7 @@ import org.opensearch.indexmanagement.rollup.resthandler.RestStopRollupAction
 import org.opensearch.indexmanagement.rollup.settings.LegacyOpenDistroRollupSettings
 import org.opensearch.indexmanagement.rollup.settings.RollupSettings
 import org.opensearch.indexmanagement.settings.IndexManagementSettings
+import org.opensearch.indexmanagement.spi.IndexManagementExtension
 import org.opensearch.indexmanagement.spi.indexstatemanagement.model.ManagedIndexMetaData
 import org.opensearch.indexmanagement.transform.TransformRunner
 import org.opensearch.indexmanagement.transform.action.delete.DeleteTransformsAction
@@ -138,6 +140,7 @@ import org.opensearch.jobscheduler.spi.ScheduledJobParser
 import org.opensearch.jobscheduler.spi.ScheduledJobRunner
 import org.opensearch.monitor.jvm.JvmService
 import org.opensearch.plugins.ActionPlugin
+import org.opensearch.plugins.ExtensiblePlugin
 import org.opensearch.plugins.NetworkPlugin
 import org.opensearch.plugins.Plugin
 import org.opensearch.repositories.RepositoriesService
@@ -152,7 +155,7 @@ import org.opensearch.watcher.ResourceWatcherService
 import java.util.function.Supplier
 
 @Suppress("TooManyFunctions")
-class IndexManagementPlugin : JobSchedulerExtension, NetworkPlugin, ActionPlugin, Plugin() {
+class IndexManagementPlugin : JobSchedulerExtension, NetworkPlugin, ActionPlugin, ExtensiblePlugin, Plugin() {
 
     private val logger = LogManager.getLogger(javaClass)
     lateinit var indexManagementIndices: IndexManagementIndices
@@ -160,6 +163,7 @@ class IndexManagementPlugin : JobSchedulerExtension, NetworkPlugin, ActionPlugin
     lateinit var indexNameExpressionResolver: IndexNameExpressionResolver
     lateinit var rollupInterceptor: RollupInterceptor
     lateinit var fieldCapsFilter: FieldCapsFilter
+    private val ismMetadataProvider = ISMMetadataProvider()
 
     companion object {
         const val PLUGINS_BASE_URI = "/_plugins"
@@ -263,6 +267,25 @@ class IndexManagementPlugin : JobSchedulerExtension, NetworkPlugin, ActionPlugin
             RestStartTransformAction(),
             RestStopTransformAction()
         )
+    }
+
+    override fun loadExtensions(loader: ExtensiblePlugin.ExtensionLoader) {
+        super.loadExtensions(loader)
+        val extensions: List<IndexManagementExtension> = loader.loadExtensions(IndexManagementExtension::class.java)
+        extensions.forEach { extension ->
+            val provider = extension.getIndexMetadataService()
+            // Load all the metadata providers for each index type
+            if (provider.isNotEmpty()) {
+                if (ismMetadataProvider.providers.keys.intersect(provider.keys).isNotEmpty()) {
+                    logger.warn("Found conflicting index types in $extension. Not installing the extension.")
+                    return
+                }
+                ismMetadataProvider.addProviders(provider)
+            }
+            // Load all the cluster event handler
+
+            // Load all the action providers to the
+        }
     }
 
     @Suppress("LongMethod")

@@ -107,7 +107,8 @@ class RequestTests : OpenSearchTestCase() {
         val out = BytesStreamOutput().apply { req.writeTo(this) }
         val sin = StreamInput.wrap(out.bytes().toBytesRef().bytes)
         val streamedReq = IndexRollupRequest(sin)
-        assertEquals(rollup, streamedReq.rollup)
+        // The jobs start time is dynamically updated
+        assertEquals(rollup.copy(jobSchedule = streamedReq.rollup.jobSchedule), streamedReq.rollup)
         assertEquals(rollup.seqNo, streamedReq.ifSeqNo())
         assertEquals(rollup.primaryTerm, streamedReq.ifPrimaryTerm())
         assertEquals(WriteRequest.RefreshPolicy.IMMEDIATE, streamedReq.refreshPolicy)

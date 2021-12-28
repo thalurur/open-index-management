@@ -13,7 +13,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.apache.logging.log4j.LogManager
-import org.locationtech.jts.algorithm.Orientation.index
 import org.opensearch.action.admin.cluster.state.ClusterStateRequest
 import org.opensearch.action.admin.cluster.state.ClusterStateResponse
 import org.opensearch.action.bulk.BackoffPolicy
